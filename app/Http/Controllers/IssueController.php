@@ -21,11 +21,28 @@ class IssueController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['status','priority','tag','search']);
-        $issues = $this->service->listIssues($filters, 12);
-        $tags = Tag::orderBy('name')->get();
-        return view('issues.index', compact('issues','tags'));
+        $query = Issue::with(['project', 'tags']);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('tag_id')) {
+            $query->whereHas('tags', function ($q) use ($request) {
+                $q->where('tags.id', $request->tag_id);
+            });
+        }
+
+        $issues = $query->latest()->paginate(10);
+        $tags = Tag::all();
+
+        return view('issues.index', compact('issues', 'tags'));
     }
+
 
     public function create()
     {

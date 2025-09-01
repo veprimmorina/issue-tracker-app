@@ -36,6 +36,7 @@ class ProjectController extends Controller
     }
     public function show(Project $project)
     {
+        $project->load(['issues.tags']);
         return view('projects.show', compact('project'));
     }
 

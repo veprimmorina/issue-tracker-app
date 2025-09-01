@@ -2,42 +2,39 @@
 
 @section('content')
     <div class="container">
-        <h1 class="mb-3">{{ $issue->title }}</h1>
-
+        <h1>{{ $issue->title }}</h1>
         <p><strong>Project:</strong> {{ $issue->project->name }}</p>
-        <p><strong>Status:</strong> {{ ucfirst(str_replace('_', ' ', $issue->status)) }}</p>
+        <p><strong>Status:</strong> {{ ucfirst($issue->status) }}</p>
         <p><strong>Priority:</strong> {{ ucfirst($issue->priority) }}</p>
-        <p><strong>Due Date:</strong> {{ $issue->due_date ?? '-' }}</p>
-        <p><strong>Description:</strong> {{ $issue->description ?? '-' }}</p>
+        <p><strong>Due Date:</strong> {{ $issue->due_date ? \Carbon\Carbon::parse($issue->due_date)->format('Y-m-d') : 'N/A' }}</p>
+        <p>{{ $issue->description }}</p>
 
-        {{-- Tags --}}
-        <h3 class="mt-4">Tags</h3>
-        <div id="tags-list" class="mb-2">
+        <hr>
+
+        <h3>Tags</h3>
+        <div id="tags-list" class="mb-3">
             @foreach($issue->tags as $tag)
                 <span class="badge bg-secondary me-1">
-                {{ $tag->name }}
-                <button class="btn-close btn-close-white btn-sm remove-tag" data-tag-id="{{ $tag->id }}"></button>
-            </span>
+            {{ $tag->name }}
+            <button type="button" class="btn-close btn-close-white btn-sm remove-tag" data-tag-id="{{ $tag->id }}"></button>
+        </span>
             @endforeach
         </div>
 
-        <h5>Attach Tag</h5>
-        <div class="d-flex align-items-center mb-4">
-            <select id="attach-tag" class="form-select w-25 me-2">
-                <option value="">Select Tag</option>
+        <div class="mb-3">
+            <select id="tag-select" class="form-select" style="width: auto; display:inline-block;">
+                <option value="">Select tag</option>
                 @foreach($tags as $tag)
-                    @if(!$issue->tags->contains($tag->id))
-                        <option value="{{ $tag->id }}">{{ $tag->name }}</option>
-                    @endif
+                    <option value="{{ $tag->id }}">{{ $tag->name }}</option>
                 @endforeach
             </select>
-            <button id="attach-btn" class="btn btn-primary">Attach</button>
+            <button type="button" id="attach-tag-btn" class="btn btn-primary btn-sm">Attach Tag</button>
         </div>
 
-        {{-- Comments --}}
+        <hr>
+
         <h3>Comments</h3>
         <div id="comments-list" class="mb-3">
-            {{-- Comments will be loaded via AJAX --}}
         </div>
 
         <h5>Add a Comment</h5>
@@ -53,61 +50,20 @@
             </div>
             <button type="submit" class="btn btn-primary">Add Comment</button>
         </form>
+
+        <hr>
+
+        <a href="{{ route('issues.edit', $issue) }}" class="btn btn-warning">Edit Issue</a>
+        <form action="{{ route('issues.destroy', $issue) }}" method="POST" style="display:inline-block;">
+            @csrf
+            @method('DELETE')
+            <button class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete Issue</button>
+        </form>
     </div>
-@endsection
 
-@section('scripts')
     <script>
-        // --- TAGS ---
-        document.getElementById('attach-btn').addEventListener('click', function() {
-            let tagId = document.getElementById('attach-tag').value;
-            if(!tagId) return;
+        const issueId = {{ $issue->id }};
 
-            fetch("{{ route('issues.attachTag', $issue->id) }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ tag_id: tagId })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.success){
-                        let tagList = document.getElementById('tags-list');
-                        tagList.innerHTML += `<span class="badge bg-secondary me-1">
-                ${data.tag.name}
-                <button class="btn-close btn-close-white btn-sm remove-tag" data-tag-id="${data.tag.id}"></button>
-            </span>`;
-                        document.getElementById('attach-tag').querySelector(`option[value="${tagId}"]`).remove();
-                    }
-                });
-        });
-
-        // Remove tag
-        document.getElementById('tags-list').addEventListener('click', function(e){
-            if(e.target.classList.contains('remove-tag')){
-                let tagId = e.target.dataset.tagId;
-                fetch("{{ route('issues.detachTag', $issue->id) }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ tag_id: tagId })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if(data.success){
-                            e.target.parentElement.remove();
-                            let select = document.getElementById('attach-tag');
-                            select.innerHTML += `<option value="${data.tag.id}">${data.tag.name}</option>`;
-                        }
-                    });
-            }
-        });
-
-        // --- COMMENTS ---
         function loadComments() {
             fetch("{{ route('issues.comments', $issue->id) }}")
                 .then(res => res.text())
@@ -120,7 +76,6 @@
 
         document.getElementById('comment-form').addEventListener('submit', function(e){
             e.preventDefault();
-
             document.getElementById('author_name_error').innerText = '';
             document.getElementById('body_error').innerText = '';
 
@@ -157,11 +112,50 @@
                 </div>
             </div>`;
                         commentsList.insertAdjacentHTML('afterbegin', commentHtml);
-
                         document.getElementById('author_name').value = '';
                         document.getElementById('body').value = '';
                     }
                 });
+        });
+
+        document.getElementById('attach-tag-btn').addEventListener('click', function(){
+            let tagId = document.getElementById('tag-select').value;
+            if(!tagId) return alert('Select a tag first');
+
+            fetch(`/issues/${issueId}/attach-tag`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({tag_id: tagId})
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success){
+                        location.reload();
+                    }
+                });
+        });
+
+        document.getElementById('tags-list').addEventListener('click', function(e){
+            if(e.target.classList.contains('remove-tag')){
+                let tagId = e.target.dataset.tagId;
+                fetch(`/issues/${issueId}/detach-tag`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ tag_id: tagId })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.success){
+                            e.target.parentElement.remove();
+                        }
+                    });
+            }
         });
     </script>
 @endsection
