@@ -1,19 +1,28 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <p>You're logged in!</p>
+@section('title', 'Dashboard')
 
-                <a href="{{ route('projects.index') }}" class="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+@section('content')
+    <div class="container mt-5">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2 class="mb-0">Dashboard</h2>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">You're logged in!</p>
+
+                <a href="{{ route('projects.index') }}" class="btn btn-primary">
                     Go to Projects
+                </a>
+
+                <a href="{{ route('issues.index') }}" class="btn btn-secondary ms-2">
+                    Go to Issues
+                </a>
+
+                <a href="{{ route('tags.index') }}" class="btn btn-secondary ms-2">
+                    Go to Tags
                 </a>
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

@@ -2,63 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Tag;
+use App\Services\TagService;
+use App\Http\Requests\StoreTagRequest;
+use App\Http\Requests\UpdateTagRequest;
 
 class TagController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    protected TagService $tagService;
+
+    public function __construct(TagService $tagService)
+    {
+        $this->tagService = $tagService;
+    }
+
     public function index()
     {
-        //
+        $tags = $this->tagService->getAll();
+        return view('tags.index', compact('tags'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('tags.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreTagRequest $request)
     {
-        //
+        $this->tagService->create($request->validated());
+        return redirect()->route('tags.index')->with('success', 'Tag created successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Tag $tag)
     {
-        //
+        return view('tags.edit', compact('tag'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(UpdateTagRequest $request, Tag $tag)
     {
-        //
+        $this->tagService->update($tag, $request->validated());
+        return redirect()->route('tags.index')->with('success', 'Tag updated successfully!');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Tag $tag)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $this->tagService->delete($tag);
+        return redirect()->route('tags.index')->with('success', 'Tag deleted successfully!');
     }
 }
