@@ -6,6 +6,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\IssueUserController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -25,6 +26,13 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('projects', ProjectController::class);
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::post('/issues/{issue}/users', [IssueUserController::class, 'attach'])
+        ->name('issues.users.attach');
+    Route::delete('/issues/{issue}/users/{user}', [IssueUserController::class, 'detach'])
+        ->name('issues.users.detach');
+});
+
 Route::middleware(['auth'])->prefix('issues')->name('issues.')->group(function () {
     Route::get('/search', [IssueController::class, 'search'])->name('search'); // AJAX search
     Route::get('/', [IssueController::class, 'index'])->name('index');
@@ -37,9 +45,6 @@ Route::middleware(['auth'])->prefix('issues')->name('issues.')->group(function (
 
     Route::post('/{issue}/attach-tag', [IssueController::class, 'attachTag'])->name('attach-tag');
     Route::post('/{issue}/detach-tag', [IssueController::class, 'detachTag'])->name('detach-tag');
-
-    Route::post('/{issue}/users', [IssueController::class, 'attachUser'])->name('users.attach');
-    Route::delete('/{issue}/users/{user}', [IssueController::class, 'detachUser'])->name('users.detach');
 
     Route::get('/{issue}/comments', [CommentController::class, 'index'])->name('comments');
     Route::post('/{issue}/comments', [CommentController::class, 'store'])->name('comments.store');

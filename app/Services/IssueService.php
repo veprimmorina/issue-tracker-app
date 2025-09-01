@@ -7,21 +7,21 @@ use App\Repositories\IssueRepository;
 
 class IssueService
 {
-    protected IssueRepository $repo;
+    protected IssueRepository $repository;
 
-    public function __construct(IssueRepository $repo)
+    public function __construct(IssueRepository $repository)
     {
-        $this->repo = $repo;
+        $this->repository = $repository;
     }
 
-    public function listIssues(array $filters = [], int $perPage = 12)
+    public function getIssues(array $filters = [])
     {
-        return $this->repo->list($perPage, $filters);
+        return $this->repository->getAllWithFilters($filters);
     }
 
-    public function getIssue(int $id): ?Issue
+    public function searchIssues(string $term = null)
     {
-        return $this->repo->find($id);
+        return $this->repository->search($term);
     }
 
     public function createIssue(array $data): Issue
@@ -29,9 +29,9 @@ class IssueService
         $tags = $data['tags'] ?? [];
         unset($data['tags']);
 
-        $issue = $this->repo->create($data);
+        $issue = $this->repository->create($data);
 
-        if ($tags) {
+        if (!empty($tags)) {
             $issue->tags()->sync($tags);
         }
 
@@ -43,15 +43,24 @@ class IssueService
         $tags = $data['tags'] ?? [];
         unset($data['tags']);
 
-        $this->repo->update($issue, $data);
+        $issue = $this->repository->update($issue, $data);
 
         $issue->tags()->sync($tags);
 
-        return $issue;
-    }
+        return $issue;    }
 
     public function deleteIssue(Issue $issue): bool
     {
-        return $this->repo->delete($issue);
+        return $this->repository->delete($issue);
+    }
+
+    public function attachTag(Issue $issue, int $tagId)
+    {
+        return $this->repository->attachTag($issue, $tagId);
+    }
+
+    public function detachTag(Issue $issue, int $tagId)
+    {
+        return $this->repository->detachTag($issue, $tagId);
     }
 }

@@ -33,4 +33,8 @@ class ProjectService
     {
         return $this->repository->delete($project);
     }
+
+    public function getAll()
+    {
+        return $this->repository->getAll();    }
 }

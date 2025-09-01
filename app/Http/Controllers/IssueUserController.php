@@ -2,27 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AttachUserRequest;
 use App\Models\Issue;
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Services\IssueUserService;
 
 class IssueUserController extends Controller
 {
-    public function attach(Request $request, Issue $issue)
+    protected IssueUserService $service;
+
+    public function __construct(IssueUserService $service)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id'
+        $this->service = $service;
+    }
+
+    public function attach(AttachUserRequest $request, Issue $issue)
+    {
+        $users = $this->service->attachUser($issue, $request->user_id);
+
+        return response()->json([
+            'success' => true,
+            'users' => $users,
         ]);
-
-        $issue->users()->syncWithoutDetaching([$request->user_id]);
-
-        return response()->json(['success' => true, 'users' => $issue->users]);
     }
 
     public function detach(Issue $issue, User $user)
     {
-        $issue->users()->detach($user->id);
+        $users = $this->service->detachUser($issue, $user->id);
 
-        return response()->json(['success' => true, 'users' => $issue->users]);
+        return response()->json([
+            'success' => true,
+            'users' => $users,
+        ]);
     }
 }

@@ -6,24 +6,35 @@ use App\Models\Issue;
 
 class IssueRepository
 {
-    public function list($perPage = 12, $filters = [])
+    public function getAllWithFilters(array $filters, int $perPage = 10)
     {
-        $q = Issue::with(['project','tags']);
+        $query = Issue::with(['project', 'tags']);
 
-        if (!empty($filters['status'])) $q->where('status', $filters['status']);
-        if (!empty($filters['priority'])) $q->where('priority', $filters['priority']);
-        if (!empty($filters['tag'])) $q->whereHas('tags', fn($qb) => $qb->where('tags.id', $filters['tag']));
-        if (!empty($filters['search'])) {
-            $s = $filters['search'];
-            $q->where(fn($qb) => $qb->where('title','like',"%{$s}%")->orWhere('description','like',"%{$s}%"));
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
         }
 
-        return $q->latest()->paginate($perPage)->withQueryString();
+        if (!empty($filters['priority'])) {
+            $query->where('priority', $filters['priority']);
+        }
+
+        if (!empty($filters['tag_id'])) {
+            $query->whereHas('tags', function ($q) use ($filters) {
+                $q->where('tags.id', $filters['tag_id']);
+            });
+        }
+
+        return $query->latest()->paginate($perPage);
     }
 
-    public function find(int $id): ?Issue
+    public function search(string $term = null)
     {
-        return Issue::with(['project','tags'])->find($id);
+        return Issue::with(['tags', 'project'])
+            ->when($term, function ($q) use ($term) {
+                $q->where('title', 'like', "%{$term}%")
+                    ->orWhere('description', 'like', "%{$term}%");
+            })
+            ->get();
     }
 
     public function create(array $data): Issue
@@ -31,13 +42,26 @@ class IssueRepository
         return Issue::create($data);
     }
 
-    public function update(Issue $issue, array $data): bool
+    public function update(Issue $issue, array $data): Issue
     {
-        return $issue->update($data);
+        $issue->update($data);
+        return $issue;
     }
 
     public function delete(Issue $issue): bool
     {
         return $issue->delete();
+    }
+
+    public function attachTag(Issue $issue, int $tagId)
+    {
+        $issue->tags()->syncWithoutDetaching([$tagId]);
+        return $issue->tags()->get();
+    }
+
+    public function detachTag(Issue $issue, int $tagId)
+    {
+        $issue->tags()->detach($tagId);
+        return $issue->tags()->get();
     }
 }

@@ -5,109 +5,97 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreIssueRequest;
 use App\Http\Requests\UpdateIssueRequest;
 use App\Models\Issue;
-use App\Models\Project;
-use App\Models\Tag;
 use App\Services\IssueService;
+use App\Services\TagService;
+use App\Services\ProjectService;
 use Illuminate\Http\Request;
-use Termwind\Components\Dd;
+use App\Http\Requests\AttachTagRequest;
+use App\Http\Requests\DetachTagRequest;
 
 class IssueController extends Controller
 {
-    protected IssueService $service;
+    protected IssueService $issueService;
+    protected TagService $tagService;
+    protected ProjectService $projectService;
 
-    public function __construct(IssueService $service)
+    public function __construct(IssueService $issueService, TagService $tagService, ProjectService $projectService)
     {
-        $this->service = $service;
+        $this->issueService   = $issueService;
+        $this->tagService     = $tagService;
+        $this->projectService = $projectService;
     }
 
     public function index(Request $request)
     {
-        $query = Issue::with(['project', 'tags']);
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-
-        if ($request->filled('tag_id')) {
-            $query->whereHas('tags', function ($q) use ($request) {
-                $q->where('tags.id', $request->tag_id);
-            });
-        }
-
-        $issues = $query->latest()->paginate(10);
-        $tags = Tag::all();
+        $issues = $this->issueService->getIssues($request->only(['status', 'priority', 'tag_id']));
+        $tags   = $this->tagService->getAll();
 
         return view('issues.index', compact('issues', 'tags'));
     }
 
     public function search(Request $request)
     {
-        $query = $request->input('q');
-
-        $issues = Issue::with('tags', 'project')
-            ->when($query, function ($q) use ($query) {
-                $q->where('title', 'like', "%{$query}%")
-                    ->orWhere('description', 'like', "%{$query}%");
-            })
-            ->get();
-
+        $issues = $this->issueService->searchIssues($request->input('q'));
         return view('issues.partials.list', compact('issues'));
     }
 
     public function create()
     {
-        $projects = Project::all();
-        $tags = Tag::all();
+        $projects = $this->projectService->getAll();
+        $tags     = $this->tagService->getAll();
+
         return view('issues.create', compact('projects', 'tags'));
     }
 
-
     public function store(StoreIssueRequest $request)
     {
-        $this->service->createIssue($request->validated());
-        return redirect()->route('issues.index')->with('success','Issue created.');
+        $this->issueService->createIssue($request->validated());
+        return redirect()->route('issues.index')->with('success', 'Issue created.');
     }
 
     public function show(Issue $issue)
     {
-        $tags = Tag::all();
+        $tags = $this->tagService->getAll();
         return view('issues.show', compact('issue', 'tags'));
     }
 
     public function edit(Issue $issue)
     {
-        $projects = Project::all();
-        $tags = Tag::all();
+        $projects = $this->projectService->getAll();
+        $tags     = $this->tagService->getAll();
+
         return view('issues.edit', compact('issue', 'projects', 'tags'));
     }
 
     public function update(UpdateIssueRequest $request, Issue $issue)
     {
-        $this->service->updateIssue($issue, $request->validated());
-        return redirect()->route('issues.show', $issue)->with('success','Issue updated.');
+        $this->issueService->updateIssue($issue, $request->validated());
+        return redirect()->route('issues.show', $issue)->with('success', 'Issue updated.');
     }
 
     public function destroy(Issue $issue)
     {
-        $this->service->deleteIssue($issue);
-        return redirect()->route('issues.index')->with('success','Issue deleted.');
+        $this->issueService->deleteIssue($issue);
+        return redirect()->route('issues.index')->with('success', 'Issue deleted.');
     }
 
-    public function attachTag(Request $request, Issue $issue)
+    public function attachTag(AttachTagRequest $request, Issue $issue)
     {
-        $request->validate(['tag_id' => 'required|exists:tags,id']);
-        $issue->tags()->syncWithoutDetaching([$request->tag_id]);
-        return response()->json(['ok'=>true,'tags'=>$issue->tags()->get()]);
+        $tags = $this->issueService->attachTag($issue, $request->tag_id);
+
+        return response()->json([
+            'ok'   => true,
+            'tags' => $tags
+        ]);
     }
 
-    public function detachTag(Request $request, Issue $issue)
+    public function detachTag(DetachTagRequest $request, Issue $issue)
     {
-        $request->validate(['tag_id' => 'required|exists:tags,id']);
-        $issue->tags()->detach($request->tag_id);
-        return response()->json(['ok'=>true,'tags'=>$issue->tags()->get()]);
+        $tags = $this->issueService->detachTag($issue, $request->tag_id);
+
+        return response()->json([
+            'ok'   => true,
+            'tags' => $tags
+        ]);
     }
 }
