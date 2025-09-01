@@ -33,6 +33,11 @@ class Issue extends Model
         return $this->belongsToMany(Tag::class);
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'issue_user')->withTimestamps();
+    }
+
     public static function statuses() { return ['open','in_progress','closed']; }
     public static function priorities() { return ['low','medium','high']; }
 }

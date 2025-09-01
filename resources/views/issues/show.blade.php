@@ -59,6 +59,66 @@
             @method('DELETE')
             <button class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete Issue</button>
         </form>
+
+        <h3>Assigned Members</h3>
+        <ul id="member-list">
+            @foreach($issue->users as $member)
+                <li>
+                    {{ $member->name }} ({{ $member->email }})
+                    <button class="btn btn-sm btn-danger detach-member" data-user-id="{{ $member->id }}">Remove</button>
+                </li>
+            @endforeach
+        </ul>
+
+        <form id="add-member-form">
+            @csrf
+            <div class="input-group">
+                <select name="user_id" id="user_id" class="form-control">
+                    <option value="">-- Select User --</option>
+                    @foreach(\App\Models\User::all() as $user)
+                        <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="btn btn-primary">Add Member</button>
+            </div>
+        </form>
+
+        <script>
+            document.getElementById('add-member-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch("{{ route('issues.users.attach', $issue) }}", {
+                    method: "POST",
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: formData
+                }).then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    });
+            });
+
+            document.querySelectorAll('.detach-member').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = this.dataset.userId;
+                    fetch("{{ url('/issues/'.$issue->id.'/users') }}/" + userId, {
+                        method: "DELETE",
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    }).then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                location.reload();
+                            }
+                        });
+                });
+            });
+        </script>
     </div>
 
     <script>

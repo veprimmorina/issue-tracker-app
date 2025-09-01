@@ -14,10 +14,16 @@ class Project extends Model
         'description',
         'start_date',
         'deadline',
+        'user_id',
     ];
 
     public function issues()
     {
         return $this->hasMany(Issue::class);
+    }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

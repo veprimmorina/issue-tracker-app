@@ -53,6 +53,6 @@
             </table>
         @endif
 
-        <a href="{{ route('projects.index') }}" class="btn btn-secondary">Back</a>
+        <a href="{{ route('projects.index') }}" class="btn btn-secondary mt-3">Back</a>
     </div>
 @endsection
