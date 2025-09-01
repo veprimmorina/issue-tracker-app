@@ -4,6 +4,10 @@
     <div class="container">
         <h1>Issues</h1>
 
+        <div class="mb-3">
+            <input type="text" id="issue-search" class="form-control" placeholder="Search issues...">
+        </div>
+
         <form method="GET" action="{{ route('issues.index') }}" class="row g-2 mb-3">
             <div class="col-md-3">
                 <select name="status" class="form-select">
@@ -52,32 +56,8 @@
                 <th>Actions</th>
             </tr>
             </thead>
-            <tbody>
-            @forelse($issues as $issue)
-                <tr>
-                    <td>{{ $issue->title }}</td>
-                    <td>{{ $issue->project->name }}</td>
-                    <td>{{ ucfirst($issue->status) }}</td>
-                    <td>{{ ucfirst($issue->priority) }}</td>
-                    <td>
-                        @foreach($issue->tags as $tag)
-                            <span class="badge bg-secondary">{{ $tag->name }}</span>
-                        @endforeach
-                    </td>
-                    <td>{{ $issue->due_date ? \Carbon\Carbon::parse($issue->due_date)->format('Y-m-d') : 'N/A' }}</td>
-                    <td>
-                        <a href="{{ route('issues.show', $issue) }}" class="btn btn-sm btn-info">View</a>
-                        <a href="{{ route('issues.edit', $issue) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="{{ route('issues.destroy', $issue) }}" method="POST" style="display:inline-block;">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="7" class="text-center">No issues found</td></tr>
-            @endforelse
+            <tbody id="issues-body">
+            @include('issues.partials.list', ['issues' => $issues])
             </tbody>
         </table>
 
@@ -85,4 +65,28 @@
             {{ $issues->links() }}
         </div>
     </div>
+
+    <script>
+        function debounce(func, delay = 300) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        const searchInput = document.getElementById('issue-search');
+
+        searchInput.addEventListener('input', debounce(function() {
+            const query = this.value;
+
+            fetch("{{ route('issues.search') }}?q=" + encodeURIComponent(query))
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('issues-body').innerHTML = html;
+                    console.log("Search results updated");
+                })
+                .catch(err => console.error(err));
+        }, 300));
+    </script>
 @endsection

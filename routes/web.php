@@ -26,6 +26,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->prefix('issues')->name('issues.')->group(function () {
+    Route::get('/search', [IssueController::class, 'search'])->name('search'); // AJAX search
     Route::get('/', [IssueController::class, 'index'])->name('index');
     Route::get('/create', [IssueController::class, 'create'])->name('create');
     Route::post('/', [IssueController::class, 'store'])->name('store');

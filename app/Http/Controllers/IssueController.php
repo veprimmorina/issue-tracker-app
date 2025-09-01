@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\Tag;
 use App\Services\IssueService;
 use Illuminate\Http\Request;
+use Termwind\Components\Dd;
 
 class IssueController extends Controller
 {
@@ -43,6 +44,19 @@ class IssueController extends Controller
         return view('issues.index', compact('issues', 'tags'));
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->input('q');
+
+        $issues = Issue::with('tags', 'project')
+            ->when($query, function ($q) use ($query) {
+                $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
+            })
+            ->get();
+
+        return view('issues.partials.list', compact('issues'));
+    }
 
     public function create()
     {
