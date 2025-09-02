@@ -3,28 +3,41 @@
 @section('title', 'Create Tag')
 
 @section('content')
-    <div class="container mt-4">
-        <h2>Create New Tag</h2>
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Create New Tag</h2>
 
-        <form action="{{ route('tags.store') }}" method="POST" class="mt-3">
-            @csrf
-            <div class="mb-3">
-                <label for="name" class="form-label">Tag Name</label>
-                <input type="text" name="name" id="name"
-                       class="form-control @error('name') is-invalid @enderror"
-                       value="{{ old('name') }}" required>
-                @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
+            <form action="{{ route('tags.store') }}" method="POST">
+                @csrf
 
-            <div class="mb-3">
-                <label for="color" class="form-label">Color (Hex Code)</label>
-                <input type="color" name="color" id="color"
-                       class="form-control form-control-color"
-                       value="{{ old('color', '#0d6efd') }}" required>
-            </div>
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Tag Name</label>
+                    <input type="text" name="name" id="name"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('name') border-red-500 @enderror"
+                           value="{{ old('name') }}" required>
+                    @error('name')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
-            <button type="submit" class="btn btn-success">Create</button>
-            <a href="{{ route('tags.index') }}" class="btn btn-secondary">Cancel</a>
-        </form>
+                <div class="mb-6">
+                    <label for="color" class="block text-sm font-medium text-gray-700">Color (Hex Code)</label>
+                    <input type="color" name="color" id="color"
+                           class="mt-1 h-10 w-20 cursor-pointer rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                           value="{{ old('color', '#0d6efd') }}" required>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button type="submit"
+                            class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow hover:bg-green-700">
+                        Create
+                    </button>
+                    <a href="{{ route('tags.index') }}"
+                       class="px-4 py-2 bg-gray-300 text-gray-800 text-sm font-medium rounded-lg shadow hover:bg-gray-400">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 @endsection
