@@ -1,18 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Project</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-<div class="container mt-5">
-    <h1>Edit Project</h1>
-    <form action="{{ route('projects.update', $project) }}" method="POST">
-        @csrf
-        @method('PUT')
-        @include('projects.partials.form')
-        <button type="submit" class="btn btn-success">Update</button>
-    </form>
-</div>
-</body>
-</html>
+@extends('layouts.app')
+
+@section('title', 'Edit Project')
+
+@section('content')
+    <div class="max-w-2xl mx-auto mt-10 bg-white shadow rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit Project</h1>
+
+        <form action="{{ route('projects.update', $project) }}" method="POST" class="space-y-5">
+            @csrf
+            @method('PUT')
+
+            @include('projects.partials.form', ['project' => $project])
+
+            <div class="flex justify-end space-x-3">
+                <a href="{{ route('projects.index') }}"
+                   class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 shadow">
+                    Update
+                </button>
+            </div>
+        </form>
+    </div>
+@endsection
