@@ -39,10 +39,12 @@ This app allows teams to manage **Projects, Issues, Tags, and Users** with a cle
 
 ---
 
-📂 Project Structure
+## 📂 Project Structure
+
+```plaintext
 app/
  ├── Http/
- │    ├── Controllers/    # Controllers
+ │    ├── Controllers/    # Controllers (Projects, Issues, Tags, Users)
  │    ├── Requests/       # Form validation requests
  │    └── Services/       # Business logic layer
  ├── Models/              # Eloquent models
