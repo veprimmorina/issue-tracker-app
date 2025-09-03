@@ -1,7 +1,7 @@
 # 📝 Issue Tracker
 
 A simple Issue Tracking application built with **Laravel 12**, **TailwindCSS**, and **Blade templates**.  
-This app allows teams to manage **Projects, Issues, Tags, and Users** with a clean and intuitive UI.
+This app allows teams to manage **Projects, Issues, Tags, and Users**.
 
 ---
 
