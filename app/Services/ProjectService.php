@@ -21,6 +21,7 @@ class ProjectService
 
     public function createProject(array $data): Project
     {
+        $data['user_id'] = auth()->id();
         return $this->repository->create($data);
     }
 
@@ -36,5 +37,11 @@ class ProjectService
 
     public function getAll()
     {
-        return $this->repository->getAll();    }
+        return $this->repository->getAll();
+    }
+
+    public function getProjectWithIssues($id)
+    {
+        return $this->repository->findWithRelations($id, ['issues.tags']);
+    }
 }

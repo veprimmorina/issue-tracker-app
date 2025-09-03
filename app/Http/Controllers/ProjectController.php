@@ -29,19 +29,14 @@ class ProjectController extends Controller
 
     public function store(StoreProjectRequest $request)
     {
-        $data = array_merge($request->validated(), [
-            'user_id' => auth()->id(),
-        ]);
-
-        $this->service->createProject($data);
-
+        $this->service->createProject($request->validated());
         return redirect()->route('projects.index')
             ->with('success', 'Project created successfully.');
     }
 
     public function show(Project $project)
     {
-        $project->load(['issues.tags']);
+        $project = $this->service->getProjectWithIssues($project->id);
         return view('projects.show', compact('project'));
     }
 

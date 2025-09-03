@@ -31,4 +31,9 @@ class ProjectRepository
     {
         return $project->delete();
     }
+
+    public function findWithRelations($id, array $relations = [])
+    {
+        return Project::with($relations)->findOrFail($id);
+    }
 }
